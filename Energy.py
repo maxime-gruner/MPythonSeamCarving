@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import Utils
 import math
 from PIL import Image
@@ -13,7 +15,7 @@ class Energy:
         self.energy_tab = []
 
     def calc_intensity(self):
-        """calcul l intensite des pixel, la formule peut etre changer je pense"""
+        """calcul l intensite des pixel, la formule peut etre changée je pense"""
         logging.info("Processing intensity ...")
         self.intensity = [i for i in range(self.height*self.width)]
         for j in range(0, self.height):
@@ -28,15 +30,16 @@ class Energy:
         self.img = img
         self.energy_tab = []
         self.calc_intensity()
+        self.calc_energy()
 
     def gradientX(self, i, j):
-        """fonction annexe pour le calcul des graadient en X"""
+        """fonction annexe pour le calcul des gradient en X"""
         if (i <= 0 or j <= 0 or i >= self.width-1 or j >= self.height-1):
             return 255
         return self.intensity[(j-1)*self.width + (i-1)] + 2*self.intensity[(j)*self.width + (i-1)] + self.intensity[(j+1)*self.width + (i-1)] - self.intensity[(j-1)*self.width + (i+1)] - 2*self.intensity[(j)*self.width + (i+1)] -self.intensity[(j+1)*self.width + (i+1)]
 
     def gradientY(self, i, j):
-        """fonction annexe pour le calcul des graadient en X"""
+        """fonction annexe pour le calcul des gradient en Y"""
         if(i <=0 or j<=0 or i>=self.width-1 or j>=self.height-1):
             return 255
         return self.intensity[(j-1)*self.width + (i-1)] + 2*self.intensity[(j-1)*self.width + (i)] + self.intensity[(j-1)*self.width + (i+1)] - self.intensity[(j+1)*self.width + (i-1)] - 2*self.intensity[(j+1)*self.width + (i)] -self.intensity[(j+1)*self.width + (i+1)]
@@ -77,7 +80,6 @@ class Energy:
                 cv = self.cost[(cy-1)*self.width + i]
         return cv,x,y
 
-
     def find_path(self):
         """recup le chemin en remontant le tableau cost """
         logging.info("Get the path from cost ...")
@@ -93,8 +95,13 @@ class Energy:
             self.path[k] = cx,cy
             k +=1
         logging.info("Path found")
-        print("Minimum path is" , self.path) #je sais pas comment afficher le log avec le path en argument alors je print
+        print("Minimum path is", self.path) #je sais pas comment afficher le log avec le path en argument alors je print
 
     def shrink_image(self, widget):
         self.chemin_less_energy()
         self.find_path()
+        
+        
+        
+        
+        

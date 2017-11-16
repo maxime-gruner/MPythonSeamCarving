@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
@@ -42,14 +44,26 @@ class MyGUI(Gtk.Window):
             self.parent.image_name = dialog.get_filename()
             logging.info("opening the image " + self.parent.image_name)
             dialog.destroy()
-            self.loadFrame(self.parent.image_name)
+            if not self.img:
+                self.img = Gtk.Image.new_from_file(self.parent.image_name)
+                self.loadFrame()
+            else:
+                self.updateImage(self.parent.image_name)
         else:
             logging.info("Cancelling the opening file Dialog")
             dialog.destroy()
 
-    def loadFrame(self, name):
+    def updateImage(self, path=None, pixbuf=None):
+        if path:
+            Gtk.Image.set_from_file(self.img, path)
+        elif pixbuf:
+            Gtk.Image.set_from_pixbuf(self.img, pixbuf)
+        self.vbox.show_all()
+        self.parent.energy.update_values(self.img.get_pixbuf().get_width(),
+                                         self.img.get_pixbuf().get_height(), self.img.get_pixbuf().get_pixels())
+
+    def loadFrame(self):
         logging.info("creating Frame")
-        self.img = Gtk.Image.new_from_file(name)
         self.open_button.set_label("Ouvrir une autre image ")
         self.vbox.pack_start(self.shrink_button, expand=True, fill=False, padding=DEFAULT_SPACING)
         self.frame.add(self.img)
@@ -58,12 +72,9 @@ class MyGUI(Gtk.Window):
         self.parent.energy.update_values(self.img.get_pixbuf().get_width(),
                                          self.img.get_pixbuf().get_height(), self.img.get_pixbuf().get_pixels())
 
-        self.parent.energy.calc_energy()
-
     def exit_program(self,a1,a2):
         logging.info("closing the GUI")
         logging.info("****Closing session*****")
         Gtk.main_quit()
-
 
 
