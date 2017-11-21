@@ -9,3 +9,6 @@
 - GUI.py -> gestion de l'interface graphique
 - Utils.py -> fonction utilitaires, constantes, etc
 - Main.py -> Appel de l'interface
+- /c_files -> Contient des fichiers c pour accélrer le code
+- Ajout de décorateur time : Passage de 5s pour calculer les énergies( pas les chemins) à 0.3s
+

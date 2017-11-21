@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import gi
+from Energy import Energy
+
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, Gdk
 import logging
 import Utils
 
 DEFAULT_SPACING = 6
+
 
 class MyGUI(Gtk.Window):
 
@@ -14,16 +17,18 @@ class MyGUI(Gtk.Window):
         """ Creating the Interface. Parent in the main function"""
         Gtk.Window.__init__(self, title="SeamCarving")
         # Data
+        self.image_name = ""
         self.parent = parent
         self.img_width = 0
         self.img_height = 0
         self.img = None
+        self.energy = Energy(self)
 
         # Widgets
         self.frame = Gtk.Frame(label="Image")
         self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=DEFAULT_SPACING)
         self.shrink_button = Gtk.Button(label="Rétrécir")
-        self.shrink_button.connect("clicked", self.parent.energy.shrink_image)
+        self.shrink_button.connect("clicked", self.energy.shrink_image)
         self.open_button = Gtk.Button(label="Ouvrez une image")
         self.open_button.connect("clicked", self.loadImage)
         self.vbox.pack_start(self.open_button, expand=True, fill=True, padding=DEFAULT_SPACING)
@@ -32,35 +37,42 @@ class MyGUI(Gtk.Window):
         self.show_all()
         Gtk.main()
 
-    def loadImage(self, widget):
+    def getFilenameChoosed(self):
         logging.info("Creating dialog to choose an image to open")
         dialog = Gtk.FileChooserDialog("Ouvrez une image", self,
-                                                       Gtk.FileChooserAction.OPEN,
-                                                       ("Annuler", Gtk.ResponseType.CANCEL,
-                                                        "Ouvrir", Gtk.ResponseType.OK))
+                                       Gtk.FileChooserAction.OPEN,
+                                       ("Annuler", Gtk.ResponseType.CANCEL,
+                                        "Ouvrir", Gtk.ResponseType.OK))
         dialog.set_current_folder(Utils.IMAGE_PATH)
         response = dialog.run()
         if response == Gtk.ResponseType.OK:
-            self.parent.image_name = dialog.get_filename()
-            logging.info("opening the image " + self.parent.image_name)
+            filename = dialog.get_filename()
+            logging.info("File selected : " + filename)
             dialog.destroy()
-            if not self.img:
-                self.img = Gtk.Image.new_from_file(self.parent.image_name)
-                self.loadFrame()
-            else:
-                self.updateImage(self.parent.image_name)
+            return filename
         else:
             logging.info("Cancelling the opening file Dialog")
             dialog.destroy()
+            return None
 
-    def updateImage(self, path=None, pixbuf=None):
-        if path:
+    def loadImage(self, widget):
+        self.image_name = self.getFilenameChoosed()
+        if not self.img:
+            self.img = Gtk.Image.new_from_file(self.image_name)
+            self.loadFrame()
+        else:
+            self.updateImage(path=self.image_name)
+
+    def updateImage(self, path="", pixbuf=""):
+        if pixbuf:
+            Gtk.Image.set_from_pixbuf(self.img, Gdk.Pixbuf.get_from_image(pixbuf))
+        else:
+            self.image_name = path
             Gtk.Image.set_from_file(self.img, path)
-        elif pixbuf:
-            Gtk.Image.set_from_pixbuf(self.img, pixbuf)
+
         self.vbox.show_all()
-        self.parent.energy.update_values(self.img.get_pixbuf().get_width(),
-                                         self.img.get_pixbuf().get_height(), self.img.get_pixbuf().get_pixels())
+        self.energy.update_values(self.img.get_pixbuf().get_width(),
+                                         self.img.get_pixbuf().get_height(), self.image_name)
 
     def loadFrame(self):
         logging.info("creating Frame")
@@ -69,8 +81,8 @@ class MyGUI(Gtk.Window):
         self.frame.add(self.img)
         self.vbox.pack_end(self.frame, expand=True, fill=False, padding=DEFAULT_SPACING)
         self.vbox.show_all()
-        self.parent.energy.update_values(self.img.get_pixbuf().get_width(),
-                                         self.img.get_pixbuf().get_height(), self.img.get_pixbuf().get_pixels())
+        self.energy.update_values(self.img.get_pixbuf().get_width(),
+                                  self.img.get_pixbuf().get_height(), self.image_name)
 
     def exit_program(self,a1,a2):
         logging.info("closing the GUI")
