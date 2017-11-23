@@ -6,6 +6,7 @@ import math
 from PIL import Image
 import logging
 import time
+from numpy.ctypeslib import ndpointer
 
 
 def timing(f):
@@ -49,14 +50,14 @@ class Energy:
     def calc_energy(self):
         """calcul l energie de chaque pixel"""
         logging.info("Processing energy ...")
-        energy_tab = [255 for i in range(self.height * self.width)]
         gradient = CDLL("./c_files/gradient.so")
         data = [element for element in self.imgBW.getdata()]
+        gradient.calculate_energy.restype = POINTER(c_int)
         c_data = (c_int * len(data))(*data)
         w, h = self.width, self.height
-        for j in range(1, h-1):
-            for i in range(1, w-1):
-                energy_tab[j*w+i] = gradient.calculate_energy(i, j, w, c_data)
+        tmp = gradient.calculate_energy(w, h, c_data)
+        energy_tab = [tmp[i] for i in range(0,w*h)]
+        gradient.free_p()
         imgE = Image.new("L", (w, h))
         imgE.putdata(energy_tab)
         self.energy_tab = energy_tab
