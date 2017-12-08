@@ -4,7 +4,7 @@ import gi
 from Energy import Energy
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk
+from gi.repository import Gtk, GdkPixbuf
 import logging
 import Utils
 
@@ -63,9 +63,11 @@ class MyGUI(Gtk.Window):
         else:
             self.updateImage(path=self.image_name)
 
-    def updateImage(self, path="", pixbuf=""):
-        if pixbuf:
-            Gtk.Image.set_from_pixbuf(self.img, Gdk.Pixbuf.get_from_image(pixbuf))
+    def updateImage(self, path="", pixbuf="",w=0,h=0):
+        if len(pixbuf)>1:
+            gdkpixbuf = GdkPixbuf.Pixbuf.new_from_data(pixbuf,GdkPixbuf.Colorspace.RGB,True, 8, w, h, w*4)
+            Gtk.Image.set_from_pixbuf(self.img, gdkpixbuf)
+
         else:
             self.image_name = path
             Gtk.Image.set_from_file(self.img, path)

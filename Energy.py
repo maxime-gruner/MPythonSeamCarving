@@ -2,11 +2,10 @@
 
 import Utils
 from ctypes import *
-import math
+import numpy as np
 from PIL import Image
 import logging
 import time
-from numpy.ctypeslib import ndpointer
 
 
 def timing(f):
@@ -27,6 +26,7 @@ class Energy:
         self.img = None
         self.intensity = []
         self.energy_tab = []
+        self.path = []
         self.imgBW = None
 
     @timing
@@ -46,6 +46,7 @@ class Energy:
         self.calc_intensity()
         self.calc_energy()
 
+
     @timing
     def calc_energy(self):
         """calcul l energie de chaque pixel"""
@@ -58,61 +59,28 @@ class Energy:
         tmp = gradient.calculate_energy(w, h, c_data)
         energy_tab = [tmp[i] for i in range(0,w*h)]
         gradient.free_p()
-        imgE = Image.new("L", (w, h))
-        imgE.putdata(energy_tab)
         self.energy_tab = energy_tab
-        imgE.show()
         logging.info("Done.")
 
+    @timing
     def chemin_less_energy(self):
         """calcul le chemin d energie la plus faible"""
         logging.info("Processing path of minimum energy ...")
-        self.cost = [i for i in range(self.width * self.height)]
-        for i in range(self.width):
-            self.cost[i] = self.energy_tab[i]
-
-        for j in range(0, self.height - 2):
-            for i in range(0, self.width):
-                if (i == self.width):
-                    self.cost[j * self.width + i] = self.cost[j * self.width + i] + min(
-                        self.cost[(j + 1) * self.width + i - 1], self.cost[(j + 1) * self.width + i])
-                elif (i == 0):
-                    self.cost[j * self.width + i] = self.cost[j * self.width + i] + min(
-                        self.cost[(j + 1) * self.width + i], self.cost[(j + 1) * self.width + (i + 1)])
-                else:
-                    self.cost[j * self.width + i] = self.cost[j * self.width + i] + min(
-                        self.cost[(j + 1) * self.width + i - 1], self.cost[(j + 1) * self.width + i],
-                        self.cost[(j + 1) * self.width + (i + 1)])
+        lessEnergyPath = CDLL("./c_files/lessEnergyPath.so")
+        lessEnergyPath.getPath.restype = POINTER(c_int)
+        c_data =(c_int *len(self.energy_tab))(*self.energy_tab)
+        tmp = lessEnergyPath.getPath(self.width, self.height, c_data)
+        self.path = [tmp[i] for i in range(0,self.height)]
+        lessEnergyPath.free_p()
         logging.info("Done.")
-
-    def min_neighbour(self, cx, cy):
-        x, y = cx, cy
-        cv = self.cost[cy * self.width + cx]
-        for i in range(-1, 2):
-            if cv >= self.cost[(cy - 1) * self.width + i]:
-                x, y = cx + i, cy - 1
-                cv = self.cost[(cy - 1) * self.width + i]
-        return cv, x, y
-
-    def find_path(self):
-        """recup le chemin en remontant le tableau cost """
-        logging.info("Get the path from cost ...")
-        self.path = [i for i in range(self.height)]
-        current = math.inf
-        k = 1
-        for i in range(self.width):
-            if current > self.cost[self.width * (self.height - 1) + i]:
-                cx, cy = (i, (self.height))
-        self.path[0] = cx, cy
-        for i in range(self.height - 1, 0, -1):
-            cv, cx, cy = self.min_neighbour(cx, i)
-            self.path[k] = cx, cy
-            k += 1
-        logging.info("Path found")
-        logging.info("Minimum path is %s" % self.path)
-        res = [i for i in range((self.width-1)*self.height)]
-
 
     def shrink_image(self, widget):
         self.chemin_less_energy()
-        self.find_path()
+        tmp = list(self.img.getdata())
+        for e in self.path:
+            tmp[e]= (0,0,0)
+        img = Image.new('RGB', (self.width, self.height))
+        img.putdata(tmp)
+        img.show()
+
+

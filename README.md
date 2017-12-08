@@ -11,5 +11,6 @@
 - Main.py -> Appel de l'interface
 - /c_files -> Contient des fichiers c pour accélrer le code
 - Ajout de décorateur time : Passage de 5s pour calculer les énergies( pas les chemins) à 0.3s
-- COmpiler un fichier python : gcc -shared -Wl,-soname,gradient -o gradient.so -fPIC gradient.c^C
+- COmpiler les fichiers fichier python : - gcc -shared -Wl,-soname,gradient -o gradient.so -fPIC gradient.c
+                                         - gcc -shared -Wl,-soname,lessEnergyPath -o lessEnergyPath.so -fPIC lessEnergyPath.c
 
