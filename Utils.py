@@ -27,6 +27,3 @@ def config_log():
     logging.getLogger().addHandler(console)
     logging.info("*****Starting a new session*****")
 
-def print_pixbuf(pixbuf):
-    for pixel in pixbuf:
-        print(pixel)

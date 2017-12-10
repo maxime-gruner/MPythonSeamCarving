@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
-
-import gi
+import tkinter as tk
+from tkinter import filedialog
+from PIL import Image, ImageTk
 from Energy import Energy
-
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GdkPixbuf
 import logging
 import Utils
 
 DEFAULT_SPACING = 6
 
 
-class MyGUI(Gtk.Window):
+class MyGUI:
 
-    def __init__(self, parent):
+    def __init__(self, parent, master):
         """ Creating the Interface. Parent in the main function"""
-        Gtk.Window.__init__(self, title="SeamCarving")
+        self.master = master
+        self.master.title("SeamCarving")
         # Data
         self.image_name = ""
         self.parent = parent
@@ -25,70 +24,48 @@ class MyGUI(Gtk.Window):
         self.energy = Energy(self)
 
         # Widgets
-        self.frame = Gtk.Frame(label="Image")
-        self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=DEFAULT_SPACING)
-        self.shrink_button = Gtk.Button(label="Rétrécir")
-        self.shrink_button.connect("clicked", self.energy.shrink_image)
-        self.open_button = Gtk.Button(label="Ouvrez une image")
-        self.open_button.connect("clicked", self.loadImage)
-        self.vbox.pack_start(self.open_button, expand=True, fill=True, padding=DEFAULT_SPACING)
-        self.add(self.vbox)
-        self.connect("delete-event", self.exit_program)
-        self.show_all()
-        Gtk.main()
+        self.frame = tk.Frame(master, height=32, width=32)
+        self.frame.pack()
+        self.shrink_button = tk.Button(self.frame, text="Rétrécir", command= lambda : self.energy.update_values(
+                                                                                                      self.img_width,
+                                                                                                      self.img_height,
+                                                                                                      self.image_name))
+        self.open_button = tk.Button(self.frame, text="Ouvrez une image", command=self.loadImage)
+        self.open_button.pack()
+
 
     def getFilenameChoosed(self):
         logging.info("Creating dialog to choose an image to open")
-        dialog = Gtk.FileChooserDialog("Ouvrez une image", self,
-                                       Gtk.FileChooserAction.OPEN,
-                                       ("Annuler", Gtk.ResponseType.CANCEL,
-                                        "Ouvrir", Gtk.ResponseType.OK))
-        dialog.set_current_folder(Utils.IMAGE_PATH)
-        response = dialog.run()
-        if response == Gtk.ResponseType.OK:
-            filename = dialog.get_filename()
-            logging.info("File selected : " + filename)
-            dialog.destroy()
+        filename = filedialog.askopenfilename(parent=self.master, title='Ouvrez une image', initialdir=Utils.IMAGE_PATH)
+        if filename:
+            logging.info("opening " + filename)
             return filename
         else:
-            logging.info("Cancelling the opening file Dialog")
-            dialog.destroy()
-            return None
+            logging.info("Opening file cancelled")
 
-    def loadImage(self, widget):
+    def loadImage(self):
         self.image_name = self.getFilenameChoosed()
         if not self.img:
-            self.img = Gtk.Image.new_from_file(self.image_name)
+            img = Image.open(self.image_name)
+            self.img = ImageTk.PhotoImage(img)
+            self.label = tk.Label(self.master, image=self.img)
+            self.label.pack()
+            self.img_width, self.img_height = img.size
             self.loadFrame()
-        else:
-            self.updateImage(path=self.image_name)
 
-    def updateImage(self, path="", pixbuf="",w=0,h=0):
-        if len(pixbuf)>1:
-            gdkpixbuf = GdkPixbuf.Pixbuf.new_from_data(pixbuf,GdkPixbuf.Colorspace.RGB,True, 8, w, h, w*4)
-            Gtk.Image.set_from_pixbuf(self.img, gdkpixbuf)
-
-        else:
-            self.image_name = path
-            Gtk.Image.set_from_file(self.img, path)
-
-        self.vbox.show_all()
-        self.energy.update_values(self.img.get_pixbuf().get_width(),
-                                         self.img.get_pixbuf().get_height(), self.image_name)
+    def updateImage(self, data, w, h):
+        img = Image.new('RGB',(w,h))
+        img.putdata(data)
+        img.show()
 
     def loadFrame(self):
         logging.info("creating Frame")
-        self.open_button.set_label("Ouvrir une autre image ")
-        self.vbox.pack_start(self.shrink_button, expand=True, fill=False, padding=DEFAULT_SPACING)
-        self.frame.add(self.img)
-        self.vbox.pack_end(self.frame, expand=True, fill=False, padding=DEFAULT_SPACING)
-        self.vbox.show_all()
-        self.energy.update_values(self.img.get_pixbuf().get_width(),
-                                  self.img.get_pixbuf().get_height(), self.image_name)
+        self.open_button.pack_forget()
+        self.shrink_button.pack()
 
     def exit_program(self,a1,a2):
         logging.info("closing the GUI")
         logging.info("****Closing session*****")
-        Gtk.main_quit()
+        self.master.main_quit()
 
 

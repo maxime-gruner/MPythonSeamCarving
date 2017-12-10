@@ -45,6 +45,7 @@ class Energy:
         self.img = Image.open(name_img)
         self.calc_intensity()
         self.calc_energy()
+        self.shrink_image()
 
 
     @timing
@@ -74,13 +75,11 @@ class Energy:
         lessEnergyPath.free_p()
         logging.info("Done.")
 
-    def shrink_image(self, widget):
+    def shrink_image(self):
         self.chemin_less_energy()
         tmp = list(self.img.getdata())
         for e in self.path:
-            tmp[e]= (0,0,0)
-        img = Image.new('RGB', (self.width, self.height))
-        img.putdata(tmp)
-        img.show()
+            tmp[e] = (0, 0, 0)
+        self.gui.updateImage(tmp, self.width, self.height)
 
 
