@@ -36,16 +36,17 @@ class Energy:
         self.imgBW = self.img.convert("L")
         logging.info("Done.")
 
-    def update_values(self, width, height, name_img):
+    def update_values(self, width, height, img):
         self.width = width
         self.height = height
 
         self.energy_tab = []
-
-        self.img = Image.open(name_img)
+        self.img = img
         self.calc_intensity()
         self.calc_energy()
         self.shrink_image()
+
+
 
 
     @timing
@@ -80,6 +81,28 @@ class Energy:
         tmp = list(self.img.getdata())
         for e in self.path:
             tmp[e] = (0, 0, 0)
-        self.gui.updateImage(tmp, self.width, self.height)
 
+        img = self.copyImage(tmp)
+
+        self.gui.updateImage(img, self.width-1, self.height)
+
+    @timing
+    def copyImage(self,tmp):
+        nw = self.width -1
+        newI = [ 0 for i in range((nw)*self.height)]
+        index = 0
+        for i in range(0,self.height):
+            j2 = 0
+            for j in range(0,self.width):
+                if index == len(self.path):
+                    for k in range(j,self.width):
+                        newI[nw*i+j2] = tmp[self.width*i+k] #permet d avoir les dernier pixel, sinon on a une ligne noir a la fin
+                        j2 = j2 + 1
+                    return newI
+                if i*self.width+j  != self.path[index]:
+                    newI[nw*i+j2] = tmp[self.width*i+j]
+                    j2 = j2+1
+                else:
+                    index = index + 1
+        return newI
 

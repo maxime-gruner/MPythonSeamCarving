@@ -29,10 +29,9 @@ class MyGUI:
         self.shrink_button = tk.Button(self.frame, text="Rétrécir", command= lambda : self.energy.update_values(
                                                                                                       self.img_width,
                                                                                                       self.img_height,
-                                                                                                      self.image_name))
+                                                                                                      self.img))
         self.open_button = tk.Button(self.frame, text="Ouvrez une image", command=self.loadImage)
         self.open_button.pack()
-
 
     def getFilenameChoosed(self):
         logging.info("Creating dialog to choose an image to open")
@@ -43,20 +42,35 @@ class MyGUI:
         else:
             logging.info("Opening file cancelled")
 
+
     def loadImage(self):
         self.image_name = self.getFilenameChoosed()
+
         if not self.img:
-            img = Image.open(self.image_name)
-            self.img = ImageTk.PhotoImage(img)
-            self.label = tk.Label(self.master, image=self.img)
+            self.img = Image.open(self.image_name)
+            img = ImageTk.PhotoImage(self.img)
+            self.label = tk.Label(self.master, image=img)
             self.label.pack()
-            self.img_width, self.img_height = img.size
+            self.label.image = img #obligatoire sinon tkinter bug
+            self.img_width, self.img_height = self.img.size
             self.loadFrame()
+        #for i in range(100):  #pour tester sur plusieurs clonne
+            #self.energy.update_values(self.img.width,self.img.height,self.img)
+            #print(i)
+
+
 
     def updateImage(self, data, w, h):
-        img = Image.new('RGB',(w,h))
-        img.putdata(data)
-        img.show()
+        self.img = Image.new('RGB',(w,h))
+        self.img.putdata(data)
+        img = ImageTk.PhotoImage(self.img)
+        self.label.configure(image=img)
+        self.label.image = img #obligatoire
+        self.label.pack()
+
+        self.img_width,self.img_height = self.img.size
+        self.loadFrame()
+
 
     def loadFrame(self):
         logging.info("creating Frame")
