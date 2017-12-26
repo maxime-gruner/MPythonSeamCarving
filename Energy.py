@@ -59,9 +59,8 @@ class Energy:
         c_data = (c_int * len(data))(*data)
         w, h = self.width, self.height
         tmp = gradient.calculate_energy(w, h, c_data)
-        energy_tab = [tmp[i] for i in range(0,w*h)]
+        self.energy_tab = [tmp[i] for i in range(0,w*h)]
         gradient.free_p()
-        self.energy_tab = energy_tab
         logging.info("Done.")
 
     @timing

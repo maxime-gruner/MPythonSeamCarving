@@ -14,17 +14,17 @@ int* getPath(int w, int h, int* data){
         for(j=1;j<w-1;j++){
             tmp = wi+j;
             bottom_line = tmp+w;
-            if(val[bottom_line-1]<val[bottom_line] && val[bottom_line-1]<val[bottom_line+1]){
+            if(val[bottom_line-1]<val[bottom_line] && val[bottom_line-1]<val[bottom_line+1] && (bottom_line-1)%w!=0){
                 val[tmp] = data[tmp] + val[bottom_line-1];
                 parent[tmp] = bottom_line-1;
             }
-            else if(val[bottom_line]<val[bottom_line-1] && val[bottom_line]<val[bottom_line+1]){
-                val[tmp] = data[tmp] + val[bottom_line];
-                parent[tmp] = bottom_line;
-            }
-            else {
+            else if(val[bottom_line+1]<val[bottom_line-1] && val[bottom_line+1]<val[bottom_line+1] && (bottom_line+2)%w!=0){
                 val[tmp] = data[tmp] + val[bottom_line+1];
                 parent[tmp] = bottom_line+1;
+            }
+            else {
+                val[tmp] = data[tmp] + val[bottom_line];
+                parent[tmp] = bottom_line;
             }
         }
         val[wi]=val[wi+1]+1;
