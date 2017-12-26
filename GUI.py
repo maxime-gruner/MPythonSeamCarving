@@ -26,10 +26,9 @@ class MyGUI:
         # Widgets
         self.frame = tk.Frame(master, height=32, width=32)
         self.frame.pack()
-        self.shrink_button = tk.Button(self.frame, text="Rétrécir", command= lambda : self.energy.update_values(
-                                                                                                      self.img_width,
-                                                                                                      self.img_height,
-                                                                                                      self.img))
+        self.spin = tk.Spinbox(master, from_=1, to=100)
+        self.shrink_button = tk.Button(self.frame, text="Rétrécir",
+                                       command=lambda : self.energy.shrink_image(int(self.spin.get())))
         self.open_button = tk.Button(self.frame, text="Ouvrez une image", command=self.loadImage)
         self.open_button.pack()
 
@@ -47,16 +46,18 @@ class MyGUI:
         self.image_name = self.getFilenameChoosed()
 
         if not self.img:
+            self.spin.pack()
             self.img = Image.open(self.image_name)
             img = ImageTk.PhotoImage(self.img)
             self.label = tk.Label(self.master, image=img)
             self.label.pack()
             self.label.image = img #obligatoire sinon tkinter bug
+
             self.img_width, self.img_height = self.img.size
+            self.energy.update_values(self.img_width,
+                                      self.img_height,
+                                      image=self.img)
             self.loadFrame()
-        #for i in range(100):  #pour tester sur plusieurs clonne
-            #self.energy.update_values(self.img.width,self.img.height,self.img)
-            #print(i)
 
 
 
