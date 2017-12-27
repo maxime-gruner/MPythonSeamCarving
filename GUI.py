@@ -32,6 +32,7 @@ class MyGUI:
         self.open_button = tk.Button(self.frame, text="Ouvrez une image", command=self.loadImage)
         self.open_button.pack()
 
+
     def getFilenameChoosed(self):
         logging.info("Creating dialog to choose an image to open")
         filename = filedialog.askopenfilename(parent=self.master, title='Ouvrez une image', initialdir=Utils.IMAGE_PATH)
@@ -40,7 +41,6 @@ class MyGUI:
             return filename
         else:
             logging.info("Opening file cancelled")
-
 
     def loadImage(self):
         self.image_name = self.getFilenameChoosed()
@@ -58,8 +58,7 @@ class MyGUI:
                                       self.img_height,
                                       image=self.img)
             self.loadFrame()
-
-
+            self.label.bind("<Configure>", self.onResize)
 
     def updateImage(self, data, w, h):
         self.img = Image.new('RGB',(w,h))
@@ -73,6 +72,7 @@ class MyGUI:
         self.loadFrame()
 
 
+
     def loadFrame(self):
         logging.info("creating Frame")
         self.open_button.pack_forget()
@@ -83,4 +83,11 @@ class MyGUI:
         logging.info("****Closing session*****")
         self.master.main_quit()
 
+    def onResize(self,event):
+
+        newW = event.width
+        oldW = self.img_width
+        if(oldW-newW > 0):
+            self.img_width = newW
+            self.energy.shrink_image(oldW - newW)
 

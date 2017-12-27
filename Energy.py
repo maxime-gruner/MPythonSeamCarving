@@ -2,7 +2,6 @@
 
 import Utils
 from ctypes import *
-import numpy as np
 from PIL import Image
 import logging
 import time
@@ -27,8 +26,7 @@ class Energy:
         self.times = 1
         self.img_data = []
         self.intensity = []
-        self.energy_tab = []
-        self.path = []
+
         self.imgBW = []
 
     @timing
@@ -42,78 +40,73 @@ class Energy:
         self.width = width
         self.height = height
 
-        self.energy_tab = []
         if image:
             self.img = image
             self.calc_intensity()
             self.img_data = list(self.img.getdata())
         else:
             self.img_data = image_data
-        self.calc_energy()
-
-
 
 
     @timing
-    def calc_energy(self):
+    def calc_energy(self,imgBW):
         """calcul l energie de chaque pixel"""
         logging.info("Processing energy ...")
         gradient = CDLL("./c_files/gradient.so")
         gradient.calculate_energy.restype = POINTER(c_int)
-        c_data = (c_int * len(self.imgBW))(*self.imgBW)
+        c_data = (c_int * len(imgBW))(*imgBW)
         w, h = self.width, self.height
         tmp = gradient.calculate_energy(w, h, c_data)
-        self.energy_tab = [tmp[i] for i in range(0,w*h)]
+        energy_tab = [tmp[i] for i in range(0,w*h)]
         gradient.free_p()
         logging.info("Done.")
+        return energy_tab
 
     @timing
-    def chemin_less_energy(self):
+    def chemin_less_energy(self,energy_tab):
         """calcul le chemin d energie la plus faible"""
         logging.info("Processing path of minimum energy ...")
         lessEnergyPath = CDLL("./c_files/lessEnergyPath.so")
         lessEnergyPath.getPath.restype = POINTER(c_int)
-        c_data =(c_int *len(self.energy_tab))(*self.energy_tab)
+        c_data =(c_int *len(energy_tab))(*energy_tab)
         tmp = lessEnergyPath.getPath(self.width, self.height, c_data)
-        self.path = [tmp[i] for i in range(0,self.height)]
+        path = [tmp[i] for i in range(self.height)]
         lessEnergyPath.free_p()
         logging.info("Done.")
+        return path
 
     @timing
     def shrink_image(self, loop):
+        energy_tab = self.calc_energy(self.imgBW)
         img = self.img
         for i in range(loop):
-            self.chemin_less_energy()
+            path = self.chemin_less_energy(energy_tab)
             tmp = self.img_data
-            for e in self.path:
-                tmp[e] = (0, 0, 0)
-            img = self.copyImage(tmp)
-            self.update_values(self.width-1, self.height, image_data=img)
 
+            img = self.copyImage(tmp,path)
+            self.update_values(self.width-1, self.height, image_data=img)
         self.gui.updateImage(img, self.width, self.height)
 
-
-    def copyImage(self,tmp):
-        nw = self.width -1
-        newI = [ 0 for i in range((nw)*self.height)]
-        newBW = [ 0 for i in range((nw)*self.height)]
+    @timing
+    def copyImage(self,tmp,path):
+        h,w = self.height, self.width
+        nw = self.width - 1
+        size = nw*h
+        newI = [0] * size
         index = 0
-        for i in range(0,self.height):
+        for i in range(h):
             j2 = 0
-            for j in range(0,self.width):
-                if index == len(self.path):
-                    for k in range(j,self.width):
-                        newI[nw*i+j2] = tmp[self.width*i+k] #permet d avoir les dernier pixel, sinon on a une ligne noir a la fin
-                        newBW[nw*i+j2] = self.imgBW[self.width*i+k]
+            indexLine = w * i
+            nIndexLine = nw*i
+            for j in range(w):
+                if index == h-1:
+                    for k in range(j,w):
+                        newI[nIndexLine+j2] = tmp[indexLine+k] #permet d avoir les dernier pixel, sinon on a une ligne noir a la fin
                         j2 = j2 + 1
                     return newI
-                if i*self.width+j != self.path[index]:
-                    newI[nw*i+j2] = tmp[self.width*i+j]
-                    newBW[nw*i+j2] = self.imgBW[self.width*i+j]
-
+                if indexLine+j != path[index]:
+                    newI[nIndexLine+j2] = tmp[indexLine+j]
                     j2 = j2+1
                 else:
                     index = index + 1
-        self.imgBW = newBW
         return newI
-
