@@ -78,15 +78,17 @@ class Energy:
     @timing
     def shrink_image(self, loop):
         img = self.img
-        for i in range(loop):
-            energy_tab = self.calc_energy(self.imgBW)
+        energy_tab = self.calc_energy(self.imgBW)
 
+        for i in range(loop):
             path = self.chemin_less_energy(energy_tab)
             tmp = self.img_data
 
             img = self.copyImage(tmp,path)
+
             self.update_values(self.width-1, self.height, image_data=img)
         self.gui.updateImage(img, self.width, self.height)
+
 
     @timing
     def copyImage(self,tmp,path):
