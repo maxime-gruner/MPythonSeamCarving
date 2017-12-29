@@ -77,9 +77,10 @@ class Energy:
 
     @timing
     def shrink_image(self, loop):
-        energy_tab = self.calc_energy(self.imgBW)
         img = self.img
         for i in range(loop):
+            energy_tab = self.calc_energy(self.imgBW)
+
             path = self.chemin_less_energy(energy_tab)
             tmp = self.img_data
 

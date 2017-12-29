@@ -23,12 +23,13 @@ class MyGUI:
         self.img = None
         self.energy = Energy(self)
 
+
         # Widgets
         self.frame = tk.Frame(master, height=32, width=32)
         self.frame.pack()
         self.spin = tk.Spinbox(master, from_=1, to=100)
         self.shrink_button = tk.Button(self.frame, text="Rétrécir",
-                                       command=lambda : self.energy.shrink_image(int(self.spin.get())))
+                                       command= self.on_click)
         self.open_button = tk.Button(self.frame, text="Ouvrez une image", command=self.loadImage)
         self.open_button.pack()
 
@@ -83,8 +84,11 @@ class MyGUI:
         logging.info("****Closing session*****")
         self.master.main_quit()
 
-    def onResize(self,event):
+    def on_click(self):
+        self.energy.shrink_image(int(self.spin.get()))
 
+
+    def onResize(self,event):
         newW = event.width
         oldW = self.img_width
         if(oldW-newW > 0):
