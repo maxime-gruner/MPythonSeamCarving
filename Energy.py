@@ -5,6 +5,7 @@ from ctypes import *
 from PIL import Image
 import logging
 import time
+import numpy as np
 
 
 def timing(f):
@@ -46,6 +47,7 @@ class Energy:
             self.img_data = list(self.img.getdata())
         else:
             self.img_data = image_data
+
 
 
     @timing
@@ -90,26 +92,25 @@ class Energy:
         self.gui.updateImage(img, self.width, self.height)
 
 
+
     @timing
-    def copyImage(self,tmp,path):
-        h,w = self.height, self.width
-        nw = self.width - 1
-        size = nw*h
-        newI = [0] * size
+    def copyImage(self, tmp, path):
+        h, w = self.height, self.width
+        old_size = w*h
+        newI = []
+        append = newI.append
         index = 0
-        for i in range(h):
-            j2 = 0
-            indexLine = w * i
-            nIndexLine = nw*i
-            for j in range(w):
-                if index == h-1:
-                    for k in range(j,w):
-                        newI[nIndexLine+j2] = tmp[indexLine+k] #permet d avoir les dernier pixel, sinon on a une ligne noir a la fin
-                        j2 = j2 + 1
-                    return newI
-                if indexLine+j != path[index]:
-                    newI[nIndexLine+j2] = tmp[indexLine+j]
-                    j2 = j2+1
-                else:
-                    index = index + 1
+        last = path[-1]
+
+        for i in range(last):
+            elem = tmp[i]
+            if path[index] == i:
+                index += 1
+            else:
+                append(elem)
+        for i in range(last+1,old_size): # copie la derniere ligne
+            append(tmp[i])
         return newI
+
+
+
