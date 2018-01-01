@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 from Energy import Energy
+from SetEnergyBoard import SetEnergyBoard
 import logging
 import Utils
 
@@ -29,10 +30,18 @@ class MyGUI:
         self.frame.pack()
         self.spin = tk.Spinbox(master, from_=1, to=100)
         self.shrink_button = tk.Button(self.frame, text="Rétrécir",
-                                       command= self.on_click)
+                                       command=self.on_click)
+        self.open_energy_button = tk.Button(self.frame, text="Ouvrir l'image d'énergie", command=self.displayEnergy)
         self.open_button = tk.Button(self.frame, text="Ouvrez une image", command=self.loadImage)
         self.open_button.pack()
 
+    def displayEnergy(self):
+        '''Créer un pop-up permettant de changer manuellement les valeurs d'énergie'''
+        tmp = Image.new('L', (self.img_width, self.img_height))
+        tmp.putdata(self.energy.energy_tab)
+        board = SetEnergyBoard(self.master, tmp, self.img_width, self.img_height).getTab()
+        if board:
+            self.energy.energy_tab = board
 
     def getFilenameChoosed(self):
         logging.info("Creating dialog to choose an image to open")
@@ -48,6 +57,7 @@ class MyGUI:
 
         if not self.img:
             self.spin.pack()
+            self.open_energy_button.pack()
             self.img = Image.open(self.image_name)
             img = ImageTk.PhotoImage(self.img)
             self.label = tk.Label(self.master, image=img)
@@ -58,6 +68,7 @@ class MyGUI:
             self.energy.update_values(self.img_width,
                                       self.img_height,
                                       image=self.img)
+            self.energy.energy_tab = self.energy.calc_energy(self.energy.imgBW)
             self.loadFrame()
             self.label.bind("<Configure>", self.onResize)
 

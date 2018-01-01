@@ -25,12 +25,12 @@ class Energy:
         self.height = 0
         self.img = None
         self.times = 1
+        self.energy_tab = []
         self.img_data = []
         self.intensity = []
 
         self.imgBW = []
 
-    @timing
     def calc_intensity(self):
         """calcul l intensite des pixel, la formule peut etre changée je pense"""
         logging.info("Processing intensity ...")
@@ -47,8 +47,6 @@ class Energy:
             self.img_data = list(self.img.getdata())
         else:
             self.img_data = image_data
-
-
 
     @timing
     def calc_energy(self,imgBW):
@@ -80,10 +78,9 @@ class Energy:
     @timing
     def shrink_image(self, loop):
         img = self.img
-        energy_tab = self.calc_energy(self.imgBW)
 
         for i in range(loop):
-            path = self.chemin_less_energy(energy_tab)
+            path = self.chemin_less_energy(self.energy_tab)
             tmp = self.img_data
 
             img = self.copyImage(tmp,path)
@@ -98,18 +95,22 @@ class Energy:
         h, w = self.height, self.width
         old_size = w*h
         newI = []
+        energy_tab = self.energy_tab
+        new_energy = []
+        append_energy = new_energy.append
         append = newI.append
         index = 0
         last = path[-1]
-
         for i in range(last):
-            elem = tmp[i]
             if path[index] == i:
                 index += 1
             else:
-                append(elem)
-        for i in range(last+1,old_size): # copie la derniere ligne
+                append(tmp[i])
+                append_energy(energy_tab[i])
+        for i in range(last+1, old_size): # copie la derniere ligne
             append(tmp[i])
+            append_energy(energy_tab[i])
+        self.energy_tab = new_energy
         return newI
 
 
