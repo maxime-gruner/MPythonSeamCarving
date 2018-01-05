@@ -102,12 +102,14 @@ class Energy:
         energy_tab = self.energy_tab
         new_energy = [0] * (self.width * (self.height - 1))
         index = 0
+
         for i in range(0, w, 1):
             found = 0
             pos=i
             for j in range(0,path[index],w):
+                
                 newI[pos] = tmp[pos]
-                new_energy[pos] = new_energy[pos]
+                new_energy[pos] = energy_tab[pos]
                 pos += w
             for j in range(path[index]+w,old_size,w):
                 newI[pos-w] = tmp[pos]
