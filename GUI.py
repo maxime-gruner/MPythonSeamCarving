@@ -33,9 +33,11 @@ class MyGUI:
                                                 command= lambda : self.on_click(0))
         self.shrink_horizontal_button = tk.Button(self.frame, text="Rétrécir horizontalement(enlever seam verticale)",
                                                   command=lambda : self.on_click(1))
+        self.detection = tk.Button(self.frame,text = "Detection des visage",command = self.face_detection)
         self.open_energy_button = tk.Button(self.frame, text="Ouvrir l'image d'énergie", command=self.displayEnergy)
         self.open_button = tk.Button(self.frame, text="Ouvrez une image", command=self.loadImage)
         self.open_button.pack()
+
 
     def displayEnergy(self):
         '''Créer un pop-up permettant de changer manuellement les valeurs d'énergie'''
@@ -73,6 +75,7 @@ class MyGUI:
             self.energy.energy_tab = self.energy.calc_energy(self.energy.imgBW)
             self.loadFrame()
             self.label.bind("<Configure>", self.onResize)
+            self.detection.pack()
 
     def updateImage(self, data, w, h):
         self.img = Image.new('RGB',(w,h))
@@ -109,3 +112,5 @@ class MyGUI:
             self.img_width = newW
             self.energy.shrink_image(oldW - newW)
 
+    def face_detection(self):
+        self.energy.detection()
