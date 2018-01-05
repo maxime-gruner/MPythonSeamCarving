@@ -107,7 +107,7 @@ class Energy:
             found = 0
             pos=i
             for j in range(0,path[index],w):
-                
+
                 newI[pos] = tmp[pos]
                 new_energy[pos] = energy_tab[pos]
                 pos += w
