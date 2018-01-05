@@ -29,8 +29,10 @@ class MyGUI:
         self.frame = tk.Frame(master, height=32, width=32)
         self.frame.pack()
         self.spin = tk.Spinbox(master, from_=1, to=100)
-        self.shrink_button = tk.Button(self.frame, text="Rétrécir",
-                                       command=self.on_click)
+        self.shrink_vertical_button = tk.Button(self.frame, text="Rétrécir verticalement (enlever seam horizontale)",
+                                                command= lambda : self.on_click(0))
+        self.shrink_horizontal_button = tk.Button(self.frame, text="Rétrécir horizontalement(enlever seam verticale)",
+                                                  command=lambda : self.on_click(1))
         self.open_energy_button = tk.Button(self.frame, text="Ouvrir l'image d'énergie", command=self.displayEnergy)
         self.open_button = tk.Button(self.frame, text="Ouvrez une image", command=self.loadImage)
         self.open_button.pack()
@@ -88,15 +90,16 @@ class MyGUI:
     def loadFrame(self):
         logging.info("creating Frame")
         self.open_button.pack_forget()
-        self.shrink_button.pack()
+        self.shrink_vertical_button.pack()
+        self.shrink_horizontal_button.pack()
 
     def exit_program(self,a1,a2):
         logging.info("closing the GUI")
         logging.info("****Closing session*****")
         self.master.main_quit()
 
-    def on_click(self):
-        self.energy.shrink_image(int(self.spin.get()))
+    def on_click(self, orientation):
+        self.energy.shrink_image(int(self.spin.get()), orientation)
 
 
     def onResize(self,event):

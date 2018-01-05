@@ -63,31 +63,35 @@ class Energy:
         return energy_tab
 
     @timing
-    def chemin_less_energy(self,energy_tab):
+    def chemin_less_energy(self, energy_tab, orientation):
         """calcul le chemin d energie la plus faible"""
         logging.info("Processing path of minimum energy ...")
         lessEnergyPath = CDLL("./c_files/lessEnergyPath.so")
         lessEnergyPath.getPath.restype = POINTER(c_int)
         c_data =(c_int *len(energy_tab))(*energy_tab)
-        tmp = lessEnergyPath.getPath(self.width, self.height, c_data)
-        path = [tmp[i] for i in range(self.height)]
+        tmp = lessEnergyPath.getPath(self.width, self.height, c_data, orientation)
+        if orientation == 1:
+            path = [tmp[i] for i in range(self.height)]
+        else:
+            path = [tmp[i] for i in range(self.width)]
+            path.sort()
         lessEnergyPath.free_p()
         logging.info("Done.")
         return path
 
     @timing
-    def shrink_image(self, loop):
+    def shrink_image(self, loop, orientation):
         img = self.img
-
         for i in range(loop):
-            path = self.chemin_less_energy(self.energy_tab)
+            path = self.chemin_less_energy(self.energy_tab, orientation)
             tmp = self.img_data
-
-            img = self.copyImage(tmp,path)
-
-            self.update_values(self.width-1, self.height, image_data=img)
+            img = self.copyImage(tmp, path)
+            #debug_path(self.width, self.height, path, tmp)
+            if orientation == 1:
+                self.update_values(self.width-1, self.height, image_data=img)
+            else:
+                self.update_values(self.width, self.height-1, image_data=img)
         self.gui.updateImage(img, self.width, self.height)
-
 
 
     @timing
@@ -114,4 +118,12 @@ class Energy:
         return newI
 
 
+def debug_path(w, h, path, img):
+    """fonction qui permet de visualiser le chemin qui sera supprimer"""
+    ni = Image.new("RGB", (w, h))
+
+    for p in path:
+        img[p] = (255, 0, 0)
+    ni.putdata(img)
+    ni.show()
 
