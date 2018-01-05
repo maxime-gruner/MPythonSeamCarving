@@ -74,7 +74,6 @@ class Energy:
             path = [tmp[i] for i in range(self.height)]
         else:
             path = [tmp[i] for i in range(self.width)]
-            path.sort()
         lessEnergyPath.free_p()
         logging.info("Done.")
         return path
@@ -85,14 +84,36 @@ class Energy:
         for i in range(loop):
             path = self.chemin_less_energy(self.energy_tab, orientation)
             tmp = self.img_data
-            img = self.copyImage(tmp, path)
             #debug_path(self.width, self.height, path, tmp)
             if orientation == 1:
-                self.update_values(self.width-1, self.height, image_data=img)
+                img = self.copyImage(tmp, path)
+                self.update_values(self.width - 1, self.height, image_data=img)
             else:
-                self.update_values(self.width, self.height-1, image_data=img)
+                img = self.copyImageh(tmp, path)
+                self.update_values(self.width, self.height - 1, image_data=img)
         self.gui.updateImage(img, self.width, self.height)
 
+    @timing
+    def copyImageh(self, tmp, path):
+        h, w = self.height, self.width
+        old_size = w * h
+        newI = [0] * (self.width * (self.height - 1))
+        energy_tab = self.energy_tab
+        new_energy = [0] * (self.width * (self.height - 1))
+        index = 0
+        for i in range(0, w, 1):
+            found = 0
+            pos=i
+            for j in range(0, old_size, w):
+                if  found == 0 and path[index] == pos:
+                    index += 1
+                    found = w
+                else:
+                    newI[pos - found] = tmp[pos]
+                    new_energy[pos - found] = energy_tab[pos]
+                pos += w
+        self.energy_tab = new_energy
+        return newI
 
     @timing
     def copyImage(self, tmp, path):
