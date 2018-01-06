@@ -54,18 +54,33 @@ class Energy:
         return energy_tab
 
     @Utils.timing
-    def chemin_less_energy(self, energy_tab, orientation):
+    def chemin_less_energy(self, energy_tab):
         """calcul le chemin d energie la plus faible"""
         logging.info("Processing path of minimum energy ...")
         lessEnergyPath = CDLL("./c_files/lessEnergyPath.so")
         lessEnergyPath.getPath.restype = POINTER(c_int)
 
         c_data =(c_int *len(energy_tab))(*energy_tab)
-        tmp = lessEnergyPath.getPath(self.width, self.height, c_data, 1)
+        tmp = lessEnergyPath.getPath(self.width, self.height, c_data)
         path = [tmp[i] for i in range(self.height)]
         lessEnergyPath.free_p()
         logging.info("Done.")
         return path
+
+    @Utils.timing
+    def cheminNCSC(self, energy_tab):
+        '''Autre méthode pour calculer le chemin, dans laquelle on ne calcul plus le cumul d'énergie, mais on choisi
+        le pixel suivant juste en comparant sa valeur'''
+        logging.info("Processing path of minimum energy ...")
+        ncsc = CDLL("./c_files/energyPathNCSC.so")
+        ncsc.getPath.restype = POINTER(c_int)
+        c_data = (c_int *len(energy_tab))(*energy_tab)
+        tmp = ncsc.getPath(self.width, self.height,c_data)
+        path = [tmp[i] for i in range(self.height)]
+        ncsc.free_p()
+        logging.info("Done.")
+        return path
+
 
     @Utils.timing
     def shrink_image(self, loop, orientation):
@@ -75,7 +90,7 @@ class Energy:
             self.energy_tab = Utils.rotate(self.energy_tab, self.width, self.height)
             self.img_data = Utils.rotate(self.img_data, self.width, self.height)
         for i in range(loop):
-            path = self.chemin_less_energy(self.energy_tab, orientation)
+            path = self.chemin_less_energy(self.energy_tab)
             tmp = self.img_data
             img = self.copyImage(tmp, path)
             #debug_path(self.width, self.height, path, tmp)
