@@ -3,74 +3,48 @@
 
 int* res;
 
-int* getPath(int w, int h, int* data, int orientation){
-    int i,j,increment1,increment2,fin1,fin2, bord,tmp, res_length, previous_line;
-    if(orientation==0){
-        increment1 = 1;
-        increment2 = w;
-        fin1 = w;
-        fin2 = w*h;
-        bord=h;
-        res_length = w;
-    }
-    else{
-        increment1 = w;
-        increment2 = 1;
-        fin1 = w*h;
-        fin2 = w;
-        bord = w;
-        res_length = h;
-    }
-    int* val = calloc(w*h, sizeof(int));
-    int* parent = calloc(w*h,sizeof(int));
-    for(i=0; i<fin2; i+= increment2) val[i]=data[i];
-    for(i = increment1; i < fin1 ; i+=increment1){
-        for(j=increment2; j<fin2-increment2; j+=increment2){
+int* getPath(int w, int h, int* data){
+    int wh = w*h;
+    int i,j,tmp,upper_pixel,wi, bottom_line = 0;
+    int* val = calloc(wh, sizeof(int));
+    int* parent = malloc(wh*sizeof(int));
+    for(i=1; i<w; i++) val[wh-i] = data[wh-i];
+    for(i=w;i<wh;i+=w){
+        for(j=1;j<w-1;j++){
             tmp = i+j;
-            previous_line = tmp-increment1;
-            if(val[previous_line-increment2]<val[previous_line] && val[previous_line-increment2]<val[previous_line+increment2]){
-                val[tmp] = data[tmp] + val[previous_line-increment2];
-                parent[tmp] = previous_line-increment2;
+            upper_pixel = tmp+w;
+            if(val[upper_pixel-1]<val[upper_pixel] && val[upper_pixel-1]<val[upper_pixel+1]){
+                val[tmp] = data[tmp] + val[upper_pixel-1];
+                parent[tmp] = upper_pixel-1;
             }
-            else if(val[previous_line+increment2]<val[previous_line-increment2] && val[previous_line+increment2]<val[previous_line]){
-                val[tmp] = data[tmp] + val[previous_line+increment2];
-                parent[tmp] = previous_line+increment2;
+            else if(val[upper_pixel+1]<val[upper_pixel]){
+                val[tmp] = data[tmp] + val[upper_pixel+1];
+                parent[tmp] = upper_pixel+1;
             }
             else {
-                val[tmp] = data[tmp] + val[previous_line];
-                parent[tmp] = previous_line;
+                val[tmp] = data[tmp] + val[upper_pixel];
+                parent[tmp] = upper_pixel;
             }
         }
-        val[i]=val[i-increment1]+255;
-        parent[i]=i-increment1;
-        val[i+j]=val[i+j-increment1]+255;
-        parent[i+j]=val[i+j-increment1];
+        val[i]=val[bottom_line]+255;
+        parent[i] = bottom_line;
+        val[i+j]=val[bottom_line+j]+255;
+        parent[i+j] = bottom_line+j;
+        bottom_line = i;
     }
-    int start_pos = (w*(h-1))-2;
-    int pos = start_pos;
-    int min = val[pos];
-    if(orientation==1){
-        for(i=0; i<bord-3;i+=increment2){
-            if(val[start_pos-i]<min){
-                pos = start_pos-i;
-                min = val[pos];
-            }
+    int min = val[w+1];
+    int pos = 1;
+    for(i=2; i<w-1;i++){
+        if(val[w+i]<min){
+            min = val[w+i];
+            pos = i;
         }
     }
-    else{
-        for(i=0; i<w*(h-2);i+=increment2){
-            if(val[start_pos-i]<min){
-                pos = start_pos-i;
-                min = val[pos];
-            }
-        }
-
-    }
-    res = malloc(res_length*sizeof(int));
-    res[res_length-1] = pos+increment1;
-    //pos = pos+w;
-    res[res_length-2] = pos;
-    for(i=res_length-3; i>=0 ; i--){
+    res = malloc(h*sizeof(int));
+    res[0] = pos;
+    pos = pos+w;
+    res[1] = pos;
+    for(i=2; i<h;i++){
         pos = parent[pos];
         res[i] = pos;
     }
@@ -78,6 +52,7 @@ int* getPath(int w, int h, int* data, int orientation){
     free(parent);
     return res;
 }
+
 
 void free_p(){
     free(res);

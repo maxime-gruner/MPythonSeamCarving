@@ -4,19 +4,9 @@ import Utils
 from ctypes import *
 from PIL import Image
 import logging
-import time
 import numpy as np
 import cv2
 
-
-def timing(f):
-    def wrap(*args):
-        time1 = time.time()
-        ret = f(*args)
-        time2 = time.time()
-        logging.info('%s function took %0.3f ms' % (f.__name__, (time2-time1)*1000.0))
-        return ret
-    return wrap
 
 
 class Energy:
@@ -49,7 +39,7 @@ class Energy:
         else:
             self.img_data = image_data
 
-    @timing
+    @Utils.timing
     def calc_energy(self,imgBW):
         """calcul l energie de chaque pixel"""
         logging.info("Processing energy ...")
@@ -63,64 +53,42 @@ class Energy:
         logging.info("Done.")
         return energy_tab
 
-    @timing
+    @Utils.timing
     def chemin_less_energy(self, energy_tab, orientation):
         """calcul le chemin d energie la plus faible"""
         logging.info("Processing path of minimum energy ...")
         lessEnergyPath = CDLL("./c_files/lessEnergyPath.so")
         lessEnergyPath.getPath.restype = POINTER(c_int)
+
         c_data =(c_int *len(energy_tab))(*energy_tab)
-        tmp = lessEnergyPath.getPath(self.width, self.height, c_data, orientation)
-        if orientation == 1:
-            path = [tmp[i] for i in range(self.height)]
-        else:
-            path = [tmp[i] for i in range(self.width)]
+        tmp = lessEnergyPath.getPath(self.width, self.height, c_data, 1)
+        path = [tmp[i] for i in range(self.height)]
         lessEnergyPath.free_p()
         logging.info("Done.")
         return path
 
-    @timing
+    @Utils.timing
     def shrink_image(self, loop, orientation):
         img = self.img
+        if orientation == 0:
+            self.width, self.height = self.height, self.width
+            self.energy_tab = Utils.rotate(self.energy_tab, self.width, self.height)
+            self.img_data = Utils.rotate(self.img_data, self.width, self.height)
         for i in range(loop):
             path = self.chemin_less_energy(self.energy_tab, orientation)
             tmp = self.img_data
+            img = self.copyImage(tmp, path)
             #debug_path(self.width, self.height, path, tmp)
-            if orientation == 1:
-                img = self.copyImage(tmp, path)
-                self.update_values(self.width - 1, self.height, image_data=img)
-            else:
-                img = self.copyImageh(tmp, path)
-                self.update_values(self.width, self.height - 1, image_data=img)
+            self.update_values(self.width-1, self.height, image_data=img)
+        if orientation == 0:
+            self.width, self.height = self.height, self.width
+            img = Utils.invRotate(img, self.width, self.height)
+            self.energy_tab = Utils.invRotate(self.energy_tab, self.width, self.height)
+            self.img_data = img
+
         self.gui.updateImage(img, self.width, self.height)
 
-    @timing
-    def copyImageh(self, tmp, path):
-        h, w = self.height, self.width
-        old_size = w * h
-
-        newI = [0] * (w * (h - 1))
-        energy_tab = self.energy_tab
-        new_energy = [0] * (w * (h - 1))
-        index = 0
-        for i in range(0, w, 1):
-            pos = i
-            for j in range(0,path[index],w):
-                newI[pos] = tmp[pos]
-                new_energy[pos] = energy_tab[pos]
-                pos += w
-            for j in range(path[index]+w,old_size,w):
-                npw = pos-w
-                newI[npw] = tmp[pos]
-                new_energy[npw] = energy_tab[pos]
-                pos += w
-            index += 1
-
-
-        self.energy_tab = new_energy
-        return newI
-
-    @timing
+    @Utils.timing
     def copyImage(self, tmp, path):
         h, w = self.height, self.width
 
@@ -137,7 +105,7 @@ class Energy:
         self.energy_tab = new_energy
         return newI
 
-    @timing
+    @Utils.timing
     def detection(self):
 
         casc = cv2.CascadeClassifier("./haarcascade_frontalface_default.xml")
@@ -150,7 +118,7 @@ class Energy:
         for x,y,w,h in faces:
             self.face_energy(ww,x,y,w,h)
 
-    @timing
+    @Utils.timing
     def face_energy(self,ww,x,y,w,h):
         for i in range(y,y+h):
             for j in range(x,x+w):
