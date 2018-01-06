@@ -108,9 +108,14 @@ class MyGUI:
     def onResize(self,event):
         newW = event.width
         oldW = self.img_width
-        if(oldW-newW > 0):
+        newH = event.height
+        oldH = self.img_height
+        if oldW-newW > 0:
             self.img_width = newW
-            self.energy.shrink_image(oldW - newW)
+            self.energy.shrink_image(oldW - newW,1)
+        if oldH - newH > 0:
+            self.img_height = newH
+            self.energy.shrink_image(oldH - newH, 0)
 
     def face_detection(self):
         self.energy.detection()

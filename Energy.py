@@ -104,16 +104,18 @@ class Energy:
         new_energy = [0] * (w * (h - 1))
         index = 0
         for i in range(0, w, 1):
-
+            pos = i
             for j in range(0,path[index],w):
-                newI[j] = tmp[j]
-                new_energy[j] = energy_tab[j]
-
+                newI[pos] = tmp[pos]
+                new_energy[pos] = energy_tab[pos]
+                pos += w
             for j in range(path[index]+w,old_size,w):
-                npw = j-w
-                newI[npw] = tmp[j]
-                new_energy[npw] = energy_tab[j]
-            index +=1
+                npw = pos-w
+                newI[npw] = tmp[pos]
+                new_energy[npw] = energy_tab[pos]
+                pos += w
+            index += 1
+
 
         self.energy_tab = new_energy
         return newI
