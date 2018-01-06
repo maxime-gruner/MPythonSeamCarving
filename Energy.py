@@ -98,23 +98,21 @@ class Energy:
     def copyImageh(self, tmp, path):
         h, w = self.height, self.width
         old_size = w * h
-        newI = [0] * (self.width * (self.height - 1))
+
+        newI = [0] * (w * (h - 1))
         energy_tab = self.energy_tab
-        new_energy = [0] * (self.width * (self.height - 1))
+        new_energy = [0] * (w * (h - 1))
         index = 0
-
         for i in range(0, w, 1):
-            found = 0
-            pos=i
-            for j in range(0,path[index],w):
 
-                newI[pos] = tmp[pos]
-                new_energy[pos] = energy_tab[pos]
-                pos += w
+            for j in range(0,path[index],w):
+                newI[j] = tmp[j]
+                new_energy[j] = energy_tab[j]
+
             for j in range(path[index]+w,old_size,w):
-                newI[pos-w] = tmp[pos]
-                new_energy[pos-w] = energy_tab[pos]
-                pos += (w)
+                npw = j-w
+                newI[npw] = tmp[j]
+                new_energy[npw] = energy_tab[j]
             index +=1
 
         self.energy_tab = new_energy
@@ -123,23 +121,17 @@ class Energy:
     @timing
     def copyImage(self, tmp, path):
         h, w = self.height, self.width
-        old_size = w*h
+
         newI = []
         energy_tab = self.energy_tab
         new_energy = []
-        append_energy = new_energy.append
-        append = newI.append
-        index = 0
-        last = path[-1]
-        for i in range(last):
-            if path[index] == i:
-                index += 1
-            else:
-                append(tmp[i])
-                append_energy(energy_tab[i])
-        for i in range(last+1, old_size): # copie la derniere ligne
-            append(tmp[i])
-            append_energy(energy_tab[i])
+
+        for i in range(0,h):
+            newI.extend(tmp[i*w:path[i]])
+            newI.extend(tmp[path[i]+1:i*w+w])
+
+            new_energy.extend(energy_tab[i * w:path[i]])
+            new_energy.extend(energy_tab[path[i] + 1:i * w + w])
         self.energy_tab = new_energy
         return newI
 
