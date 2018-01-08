@@ -54,12 +54,25 @@ class Energy:
         return energy_tab
 
     @Utils.timing
+    def calc_energy_hog(self, imgBW):
+        """calcul l energie de chaque pixel"""
+        logging.info("Processing energy ...")
+        gradient = CDLL("./c_files/gradient.so")
+        gradient.calculate_energy_hog.restype = POINTER(c_int)
+        c_data = (c_int * len(imgBW))(*imgBW)
+        w, h = self.width, self.height
+        tmp = gradient.calculate_energy_hog(w, h, c_data)
+        energy_tab = [tmp[i] for i in range(0, w * h)]
+        gradient.free_p()
+        logging.info("Done.")
+        return energy_tab
+
+    @Utils.timing
     def chemin_less_energy(self, energy_tab, orientation):
         """calcul le chemin d energie la plus faible"""
         logging.info("Processing path of minimum energy ...")
         lessEnergyPath = CDLL("./c_files/lessEnergyPath.so")
         lessEnergyPath.getPath.restype = POINTER(c_int)
-
         c_data =(c_int *len(energy_tab))(*energy_tab)
         tmp = lessEnergyPath.getPath(self.width, self.height, c_data)
         path = [tmp[i] for i in range(self.height)]
