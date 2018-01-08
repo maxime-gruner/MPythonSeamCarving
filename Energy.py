@@ -61,7 +61,7 @@ class Energy:
         lessEnergyPath.getPath.restype = POINTER(c_int)
 
         c_data =(c_int *len(energy_tab))(*energy_tab)
-        tmp = lessEnergyPath.getPath(self.width, self.height, c_data, 1)
+        tmp = lessEnergyPath.getPath(self.width, self.height, c_data)
         path = [tmp[i] for i in range(self.height)]
         lessEnergyPath.free_p()
         logging.info("Done.")
