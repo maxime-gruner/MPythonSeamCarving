@@ -81,7 +81,6 @@ class Energy:
         logging.info("Done.")
         return path
 
-
     @Utils.timing
     def shrink_image(self, loop, orientation):
         img = self.img
