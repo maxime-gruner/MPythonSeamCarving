@@ -23,7 +23,10 @@ class MyGUI:
         self.img_height = 0
         self.img = None
         self.energy = Energy(self)
-
+        self.nmode_energy = 2
+        self.value_energy = [0,1]
+        self.name_energy = ["Gradient", "HOG"]
+        self.v_energy = tk.IntVar()
 
         # Widgets
         self.frame = tk.Frame(master, height=32, width=32)
@@ -37,6 +40,10 @@ class MyGUI:
         self.open_energy_button = tk.Button(self.frame, text="Ouvrir l'image d'énergie", command=self.displayEnergy)
         self.open_button = tk.Button(self.frame, text="Ouvrez une image", command=self.loadImage)
         self.open_button.pack()
+
+
+
+
 
 
     def displayEnergy(self):
@@ -72,10 +79,14 @@ class MyGUI:
             self.energy.update_values(self.img_width,
                                       self.img_height,
                                       image=self.img)
-            self.energy.energy_tab = self.energy.calc_energy(self.energy.imgBW)
             self.loadFrame()
             self.label.bind("<Configure>", self.onResize)
             self.detection.pack()
+            for i in range(self.nmode_energy):
+                b = tk.Radiobutton(self.frame, variable=self.v_energy, text=self.name_energy[i],
+                                   value=self.value_energy[i], command = self.click_Radio)
+                b.pack()
+            self.v_energy.set(0)
 
     def updateImage(self, data, w, h):
         self.img = Image.new('RGB',(w,h))
@@ -119,3 +130,10 @@ class MyGUI:
 
     def face_detection(self):
         self.energy.detection()
+
+    def click_Radio(self):
+        v = self.v_energy.get()
+        if v == 0:
+            self.energy.energy_tab = self.energy.calc_energy(self.energy.imgBW)
+        elif v == 1:
+            self.energy.energy_tab = self.energy.calc_energy_hog(self.energy.imgBW)
