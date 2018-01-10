@@ -28,18 +28,22 @@ class MyGUI:
         self.name_energy = ["Gradient", "HOG"]
         self.v_energy = tk.IntVar()
 
+        tk.Grid.rowconfigure(master,0,weight = 1)
+        tk.Grid.columnconfigure(master, 0, weight = 1)
         # Widgets
         self.frame = tk.Frame(master, height=32, width=32)
-        self.frame.pack()
+
+        self.frame.grid(sticky = tk.N + tk.S + tk.E + tk.N)
         self.spin = tk.Spinbox(master, from_=1, to=100)
-        self.shrink_vertical_button = tk.Button(self.frame, text="Rétrécir verticalement (enlever seam horizontale)",
+        self.shrink_vertical_button = tk.Button(self.frame, text="Enlever seam horizontale",
                                                 command= lambda : self.on_click(0))
-        self.shrink_horizontal_button = tk.Button(self.frame, text="Rétrécir horizontalement(enlever seam verticale)",
+        self.shrink_horizontal_button = tk.Button(self.frame, text="Enlever seam verticale",
                                                   command=lambda : self.on_click(1))
         self.detection = tk.Button(self.frame,text = "Detection des visage",command = self.face_detection)
         self.open_energy_button = tk.Button(self.frame, text="Ouvrir l'image d'énergie", command=self.displayEnergy)
         self.open_button = tk.Button(self.frame, text="Ouvrez une image", command=self.loadImage)
-        self.open_button.pack()
+        #self.open_button.pack()
+        self.open_button.grid(row = 0, column = 0,sticky = tk.N + tk.S + tk.E + tk.N)
 
 
 
@@ -67,12 +71,15 @@ class MyGUI:
         self.image_name = self.getFilenameChoosed()
 
         if not self.img:
-            self.spin.pack()
-            self.open_energy_button.pack()
+            #self.spin.pack()
+            self.spin.grid(row = 2, column = 0,sticky = tk.N + tk.S + tk.E + tk.N)
+            #self.open_energy_button.pack()
+            self.open_energy_button.grid(row = 5, column = 2,sticky = tk.N + tk.S + tk.E + tk.N)
             self.img = Image.open(self.image_name)
             img = ImageTk.PhotoImage(self.img)
             self.label = tk.Label(self.master, image=img)
-            self.label.pack()
+            #self.label.pack()
+            self.label.grid(row = 4,column = 0,sticky = tk.N + tk.S + tk.E + tk.N)
             self.label.image = img #obligatoire sinon tkinter bug
 
             self.img_width, self.img_height = self.img.size
@@ -81,12 +88,18 @@ class MyGUI:
                                       image=self.img)
             self.loadFrame()
             self.label.bind("<Configure>", self.onResize)
-            self.detection.pack()
+            #self.detection.pack()
+            self.detection.grid(row = 5, column = 1,sticky = tk.N + tk.S + tk.E + tk.N)
             for i in range(self.nmode_energy):
                 b = tk.Radiobutton(self.frame, variable=self.v_energy, text=self.name_energy[i],
                                    value=self.value_energy[i], command = self.click_Radio)
-                b.pack()
+                b.grid(row = 4,column = 1+i,sticky = tk.N + tk.S + tk.E + tk.N)
             self.v_energy.set(0)
+            self.energy.energy_tab = self.energy.calc_energy(self.energy.imgBW)
+            for row_index in range(6):
+                tk.Grid.rowconfigure(self.frame, row_index, weight=1)
+                for col_index in range(6):
+                    tk.Grid.columnconfigure(self.frame, col_index, weight=1)
 
     def updateImage(self, data, w, h):
         self.img = Image.new('RGB',(w,h))
@@ -94,8 +107,6 @@ class MyGUI:
         img = ImageTk.PhotoImage(self.img)
         self.label.configure(image=img)
         self.label.image = img #obligatoire
-        self.label.pack()
-
         self.img_width,self.img_height = self.img.size
         self.loadFrame()
 
@@ -103,9 +114,13 @@ class MyGUI:
 
     def loadFrame(self):
         logging.info("creating Frame")
-        self.open_button.pack_forget()
-        self.shrink_vertical_button.pack()
-        self.shrink_horizontal_button.pack()
+        #self.open_button.pack_forget()
+        self.open_button.grid_remove()
+        #self.shrink_vertical_button.pack()
+        #self.shrink_horizontal_button.pack()
+        self.shrink_horizontal_button.grid( row = 1, column = 0, columnspan = 2,sticky = tk.N + tk.S + tk.E + tk.N)
+        self.shrink_vertical_button.grid(row=1, column=2,columnspan= 2,sticky = tk.N + tk.S + tk.E + tk.N)
+
 
     def exit_program(self,a1,a2):
         logging.info("closing the GUI")
@@ -117,6 +132,7 @@ class MyGUI:
 
 
     def onResize(self,event):
+        print("resize !")
         newW = event.width
         oldW = self.img_width
         newH = event.height

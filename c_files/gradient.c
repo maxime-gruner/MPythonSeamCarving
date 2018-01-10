@@ -36,7 +36,7 @@ int* calculate_energy(int w, int h, int* data){
 int* calculate_energy_hog(int w, int h, int* data){
     int wh = w*h;
     int i2 = 0,j2=0;
-    int i,j,current,current_minus_w,corner,x,y,gx,gy,wj;
+    int i,j,current,current_minus_w,current_plus_w,corner,x,y,gx,gy,wj;
     res = malloc(wh*sizeof(int));
     double *angle = calloc(wh,sizeof(double));
     for(j =0; j<h; j++){
@@ -60,11 +60,12 @@ int* calculate_energy_hog(int w, int h, int* data){
         for(i = 1; i<w-1;i++){
             current = j*w+i;
             current_minus_w = current - w;
-            corner = data[current_minus_w - 1] - data[current + w + 1];
-            x = data[current_minus_w + 1];
-            y = data[current + w - 1];
-            gx = 2*data[current-1] - 2*data[current+1] + corner + y - x;
-            gy = 2*data[current_minus_w] - 2*data[current+w] + corner + x - y;
+            current_plus_w = current + w;
+            //corner = data[current_minus_w - 1] - data[current + w + 1];
+            //x = data[current_minus_w + 1];
+            //y = data[current + w - 1];
+            gx = (data[current_minus_w]-data[current_plus_w])/2;
+            gy = (data[current+1] - data[current-1])/2;
             res[current] =  abs(gx) + abs(gy);
             if(gx == 0) gx=1; //evite la div par 0
             angle[current] = atan(gy/gx)*(180/M_PI);
@@ -79,15 +80,15 @@ int* calculate_energy_hog(int w, int h, int* data){
                 for(i2 = i-5; i2 <= i+5; i2++){
 
                         float d = angle[j2*w+i2] ;
-                        if(d < 0) d= d+360;
+                        if(d < 0) d= d+180;
 
-                        if(d< 22) histo[0] +=  1;
-                        else if(d < 67) histo[1] +=  1;
-                        else if(d < 112) histo[2] +=  1;
-                        else if(d < 157) histo[3] += + 1;
-                        else if(d < 202) histo[4] += + 1;
-                        else if(d < 247) histo[5] +=  1;
-                        else if(d < 292) histo[6] +=  1;
+                        if(d< 11) histo[0] +=  1;
+                        else if(d < 33) histo[1] +=  1;
+                        else if(d < 55) histo[2] +=  1;
+                        else if(d < 77) histo[3] += + 1;
+                        else if(d < 99) histo[4] += + 1;
+                        else if(d < 111) histo[5] +=  1;
+                        else if(d < 133) histo[6] +=  1;
                         else histo[7] += 1;
 
                 }
@@ -95,16 +96,15 @@ int* calculate_energy_hog(int w, int h, int* data){
             int max = -1;
             int save = 0;
             for(i2=0; i2<8;i2++){
-                //printf("%d ", histo[i2]);
+
                 if(max < histo[i2]){
                     max = histo[i2];
                     save = i2;
                 }
 
             }
-            //printf("\n save: %d \n", save);
 
-            int b = save*45;
+            int b = save*22;
 
             if(b != 0)
                 res[current] = res[current]/(b);

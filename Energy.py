@@ -53,10 +53,7 @@ class Energy:
         logging.info("Done.")
         return energy_tab
 
-    @Utils.timing
-<<<<<<< HEAD
-    def chemin_less_energy(self, energy_tab):
-=======
+
     def calc_energy_hog(self, imgBW):
         """calcul l energie de chaque pixel"""
         logging.info("Processing energy ...")
@@ -72,7 +69,6 @@ class Energy:
 
     @Utils.timing
     def chemin_less_energy(self, energy_tab, orientation):
->>>>>>> ce13e6613657c9cc55682f98e70fe81d5e622dce
         """calcul le chemin d energie la plus faible"""
         logging.info("Processing path of minimum energy ...")
         lessEnergyPath = CDLL("./c_files/lessEnergyPath.so")
@@ -106,7 +102,7 @@ class Energy:
             self.energy_tab = Utils.rotate(self.energy_tab, self.width, self.height)
             self.img_data = Utils.rotate(self.img_data, self.width, self.height)
         for i in range(loop):
-            path = self.chemin_less_energy(self.energy_tab)
+            path = self.chemin_less_energy(self.energy_tab,orientation)
             tmp = self.img_data
             img = self.copyImage(tmp, path)
             #debug_path(self.width, self.height, path, tmp)
