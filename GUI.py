@@ -23,10 +23,16 @@ class MyGUI:
         self.img_height = 0
         self.img = None
         self.energy = Energy(self)
+
         self.nmode_energy = 2
         self.value_energy = [0,1]
         self.name_energy = ["Gradient", "HOG"]
         self.v_energy = tk.IntVar()
+
+        self.actual_chemin = 0
+        self.value_chemin = [0,1]
+        self.name_chemin = ["chemin_less", "NCSC"]
+        self.v_chemin = tk.IntVar()
 
         # Widgets
         self.frame = tk.Frame(master, height=32, width=32)
@@ -34,6 +40,7 @@ class MyGUI:
         self.resize_panel = tk.Frame(self.master)
         self.other_panel = tk.Frame(self.master)
         self.radio_panel = tk.Frame(self.master)
+        self.chemin_panel = tk.Frame(self.master)
 
         self.frame.pack()
         self.spin = tk.Spinbox(self.resize_panel, from_=1, to=100)
@@ -41,6 +48,7 @@ class MyGUI:
                                                 command= lambda : self.on_click(0))
         self.shrink_horizontal_button = tk.Button(self.resize_panel, text="Enlever seam verticale",
                                                   command=lambda : self.on_click(1))
+
         self.detection = tk.Button(self.other_panel,text = "Detection des visage",command = self.face_detection)
         self.open_energy_button = tk.Button(self.other_panel, text="Ouvrir l'image d'énergie", command=self.displayEnergy)
         self.open_button = tk.Button(self.frame, text="Ouvrez une image", command=self.loadImage)
@@ -90,12 +98,19 @@ class MyGUI:
                                    value=self.value_energy[i], command = self.click_Radio)
                 b.pack(side = tk.LEFT)
 
+            for i in range(2):
+                b = tk.Radiobutton(self.chemin_panel, variable=self.v_chemin, text=self.name_chemin[i],
+                                   value=self.value_chemin[i], command = self.click_radio_chemin)
+                b.pack(side = tk.LEFT)
+
             self.other_panel.pack()
             self.resize_panel.pack()
             self.radio_panel.pack()
+            self.chemin_panel.pack()
             self.label.pack(side=tk.BOTTOM)
 
             self.v_energy.set(0)
+            self.v_chemin.set(0)
             self.energy.energy_tab = self.energy.calc_energy(self.energy.imgBW)
 
     def updateImage(self, data, w, h):
@@ -123,7 +138,7 @@ class MyGUI:
         self.master.main_quit()
 
     def on_click(self, orientation):
-        self.energy.shrink_image(int(self.spin.get()), orientation)
+        self.energy.shrink_image(int(self.spin.get()), self.actual_chemin ,orientation)
 
 
     def onResize(self,event):
@@ -133,10 +148,10 @@ class MyGUI:
         oldH = self.img_height
         if oldW-newW > 0:
             self.img_width = newW
-            self.energy.shrink_image(oldW - newW,1)
+            self.energy.shrink_image(oldW - newW,self.actual_chemin, 1)
         if oldH - newH > 0:
             self.img_height = newH
-            self.energy.shrink_image(oldH - newH, 0)
+            self.energy.shrink_image(oldH - newH, self.actual_chemin, 0)
 
     def face_detection(self):
         self.energy.detection()
@@ -147,3 +162,6 @@ class MyGUI:
             self.energy.energy_tab = self.energy.calc_energy(self.energy.imgBW)
         elif v == 1:
             self.energy.energy_tab = self.energy.calc_energy_hog(self.energy.imgBW)
+
+    def click_radio_chemin(self):
+        self.actual_chemin = self.v_chemin.get()

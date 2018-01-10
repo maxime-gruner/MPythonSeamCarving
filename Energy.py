@@ -68,7 +68,7 @@ class Energy:
         return energy_tab
 
     @Utils.timing
-    def chemin_less_energy(self, energy_tab, orientation):
+    def chemin_less_energy(self, energy_tab):
         """calcul le chemin d energie la plus faible"""
         logging.info("Processing path of minimum energy ...")
         lessEnergyPath = CDLL("./c_files/lessEnergyPath.so")
@@ -95,14 +95,17 @@ class Energy:
         return path
 
     @Utils.timing
-    def shrink_image(self, loop, orientation):
+    def shrink_image(self, loop, type ,orientation):
         img = self.img
         if orientation == 0:
             self.width, self.height = self.height, self.width
             self.energy_tab = Utils.rotate(self.energy_tab, self.width, self.height)
             self.img_data = Utils.rotate(self.img_data, self.width, self.height)
         for i in range(loop):
-            path = self.chemin_less_energy(self.energy_tab,orientation)
+            if type == 0:
+                path = self.chemin_less_energy(self.energy_tab)
+            elif type == 1:
+                path = self.cheminNCSC(self.energy_tab)
             tmp = self.img_data
             img = self.copyImage(tmp, path)
             #debug_path(self.width, self.height, path, tmp)
