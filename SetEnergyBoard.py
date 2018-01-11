@@ -39,7 +39,6 @@ class SetEnergyBoard(Toplevel):
         self.setup()
 
     def confirm(self):
-        self.bg.show()
         self.new_energy_tab = list(self.bg.getdata())
         self.destroy()
 

@@ -83,47 +83,46 @@ class MyGUI:
 
     def load_image(self):
         self.image_name = self.get_filename_choosed()
+        if self.image_name:
+            if not self.img:
+                self.img = Image.open(self.image_name)
+                img = ImageTk.PhotoImage(self.img)
+                self.img_width, self.img_height = self.img.size
+                self.label = tk.Label(self.master, image=img)
+                self.label.image = img  # obligatoire sinon tkinter bug
 
-        if not self.img:
-            self.img = Image.open(self.image_name)
-            img = ImageTk.PhotoImage(self.img)
-            self.img_width, self.img_height = self.img.size
-            self.label = tk.Label(self.master, image=img)
-            self.label.image = img  # obligatoire sinon tkinter bug
+                self.energy.update_values(self.img_width,
+                                          self.img_height,
+                                          image=self.img)
 
-            self.energy.update_values(self.img_width,
-                                      self.img_height,
-                                      image=self.img)
+                self.label.bind("<Configure>", self.onResize)
+                self.detection.pack(side=tk.LEFT)
+                self.open_energy_button.pack(side=tk.LEFT)
+                self.load_frame()
 
-            self.label.bind("<Configure>", self.onResize)
+                self.desc_energy = tk.Label(self.radio_panel, text="Mode energy : ")
+                self.desc_energy.pack(side=tk.LEFT)
+                for i in range(self.nmode_energy):
+                    b = tk.Radiobutton(self.radio_panel, variable=self.v_energy, text=self.name_energy[i],
+                                       value=self.value_energy[i], command=self.click_radio)
+                    b.pack(side=tk.LEFT)
 
-            self.detection.pack(side=tk.LEFT)
-            self.open_energy_button.pack(side=tk.LEFT)
-            self.load_frame()
+                self.desc_carving.pack(side=tk.LEFT)
+                for i in range(2):
+                    b = tk.Radiobutton(self.chemin_panel, variable=self.v_chemin, text=self.name_chemin[i],
+                                       value=self.value_chemin[i], command=self.click_radio_chemin)
+                    b.pack(side=tk.LEFT)
 
-            self.desc_energy = tk.Label(self.radio_panel, text="Mode energy : ")
-            self.desc_energy.pack(side=tk.LEFT)
-            for i in range(self.nmode_energy):
-                b = tk.Radiobutton(self.radio_panel, variable=self.v_energy, text=self.name_energy[i],
-                                   value=self.value_energy[i], command=self.click_radio)
-                b.pack(side=tk.LEFT)
+                self.other_panel.pack()
+                self.resize_panel.pack()
+                self.resize_panel2.pack()
+                self.radio_panel.pack()
+                self.chemin_panel.pack()
+                self.label.pack(side=tk.BOTTOM)
 
-            self.desc_carving.pack(side=tk.LEFT)
-            for i in range(2):
-                b = tk.Radiobutton(self.chemin_panel, variable=self.v_chemin, text=self.name_chemin[i],
-                                   value=self.value_chemin[i], command=self.click_radio_chemin)
-                b.pack(side=tk.LEFT)
-
-            self.other_panel.pack()
-            self.resize_panel.pack()
-            self.resize_panel2.pack()
-            self.radio_panel.pack()
-            self.chemin_panel.pack()
-            self.label.pack(side=tk.BOTTOM)
-
-            self.v_energy.set(0)
-            self.v_chemin.set(0)
-            self.energy.energy_tab = self.energy.calc_energy(self.energy.imgBW)
+                self.v_energy.set(0)
+                self.v_chemin.set(0)
+                self.energy.energy_tab = self.energy.calc_energy(self.energy.imgBW)
 
     def update_image(self, data, w, h):
         self.img = Image.new('RGB', (w, h))
@@ -190,3 +189,6 @@ class MyGUI:
 
     def click_radio_chemin(self):
         self.actual_chemin = self.v_chemin.get()
+
+    def show_image(self):
+        self.img.show()
