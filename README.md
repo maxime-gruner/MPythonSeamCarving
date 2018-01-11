@@ -46,6 +46,14 @@ Le Projet
       et supprimer toutes les seams dont la valeur du chemin d'énergie est inférieure à un pourcentage de la seam minimale donnée.
       C'est ce qui permet de pouvoir supprimé plusieurs seams d'un seul coup, et de diminuer drastiquement le temps d'exécution
       du programme.
+      
+      Metaphore pour comprendre la méthode NCSC:
+      Une seam est comme un serpent du jeu Snake: elle commence de taille 1 pixel, tout en haut de l'image. La valeur d'une seam est la somme de toutes
+      les énergies des pixels par lesquelles elle est déjà passé. À chaque étape, toutes les seams descendent vers le pixel d'énergie minimal
+      parmi les 3 en dessous. Si 2 tête de seams arrivent sur un même pixel, celle qui avait la valeur minimal est conservée, et continue son chemin,
+      tandis que l'autre est abandonnée. Ainsi, en bas de l'image, il ne restera que des seams minimales locales.
+      On trouve ensuite la seam de valeur minimum parmi elles, et on la supprime, ainsi que toutes les seams dont les valeurs
+      sont proches de la seam minimale.
 
 - [x] Detection de visage: codé via openCV dans 'Energy.py'
 openCV permet la reconnaissance d'un visage a l'aide d'un classifier  'haarcascade_frontalface_default.xml' situé dans le répertoire du projet. Ce fichier était donné sur le site d'openCV. La fonction renvoie alors un carré autour du visage si celui-ci est detecté. Ensuite on met l'energie de tous les pixel a l'interieur à 255 afin de preserver les visages du seamcarving. On peut visualiser cela en affichant l'image d'energie
