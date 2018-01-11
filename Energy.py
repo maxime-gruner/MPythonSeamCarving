@@ -8,7 +8,6 @@ import cv2
 from operator import itemgetter
 
 
-
 class Energy:
     def __init__(self, gui):
         self.gui = gui
@@ -40,7 +39,7 @@ class Energy:
             self.img_data = image_data
 
     @Utils.timing
-    def calc_energy(self,imgBW):
+    def calc_energy(self, imgBW):
         """calcul l energie de chaque pixel"""
         logging.info("Processing energy ...")
         gradient = CDLL("./c_files/gradient.so")
@@ -48,11 +47,10 @@ class Energy:
         c_data = (c_int * len(imgBW))(*imgBW)
         w, h = self.width, self.height
         tmp = gradient.calculate_energy(w, h, c_data)
-        energy_tab = [tmp[i] for i in range(0,w*h)]
+        energy_tab = [tmp[i] for i in range(0, w * h)]
         gradient.free_p()
         logging.info("Done.")
         return energy_tab
-
 
     def calc_energy_hog(self, imgBW):
         """calcul l energie de chaque pixel"""
@@ -73,7 +71,7 @@ class Energy:
         logging.info("Processing path of minimum energy ...")
         lessEnergyPath = CDLL("./c_files/lessEnergyPath.so")
         lessEnergyPath.getPath.restype = POINTER(c_int)
-        c_data =(c_int *len(energy_tab))(*energy_tab)
+        c_data = (c_int * len(energy_tab))(*energy_tab)
         tmp = lessEnergyPath.getPath(self.width, self.height, c_data)
         path = [tmp[i] for i in range(self.height)]
         lessEnergyPath.free_p()
@@ -87,72 +85,127 @@ class Energy:
         logging.info("Processing path of minimum energy ...")
         ncsc = CDLL("./c_files/energyPathNCSC.so")
         ncsc.getPath.restype = POINTER(c_int)
-        c_data = (c_int *len(energy_tab))(*energy_tab)
-        tmp = ncsc.getPath(self.width, self.height,c_data)
+        c_data = (c_int * len(energy_tab))(*energy_tab)
+        tmp = ncsc.getPath(self.width, self.height, c_data)
         path = [tmp[i] for i in range(self.height)]
         ncsc.free_p()
         logging.info("Done.")
         return path
 
     @Utils.timing
-    def cheminNCSC2(self, energy_tab,limit):
+    def cheminNCSC2(self, energy_tab, limit):
         '''Autre méthode pour calculer le chemin, dans laquelle on ne calcul plus le cumul d'énergie, mais on choisi
         le pixel suivant juste en comparant sa valeur'''
         logging.info("Processing path of minimum energy ...")
-        path = self.getNCSCpath(energy_tab, self.width, self.height,limit)
+        path = self.getNCSCpath(energy_tab, self.width, self.height, limit)
         logging.info("Done.")
         return path
 
     @Utils.timing
-    def shrink_image(self, loop, type ,orientation):
+    def shrink_image(self, loop, type_chemin, orientation):
         img = self.img
         if orientation == 0:
             self.width, self.height = self.height, self.width
             self.energy_tab = Utils.rotate(self.energy_tab, self.width, self.height)
             self.img_data = Utils.rotate(self.img_data, self.width, self.height)
-        i=0
+        i = 0
         while i < loop:
             decrement = 1
-            if type == 0:
+            if type_chemin == 0:
                 path = self.chemin_less_energy(self.energy_tab)
                 tmp = self.img_data
-                img = self.copyImage(tmp, path)
-                i+=decrement
-            elif type == 1:
-                path = self.cheminNCSC2(self.energy_tab,loop-i)
-                decrement = int((len(path)/self.height))
+                img = self.reduce_image(tmp, path)
+                i += decrement
+            elif type_chemin == 1:
+                path = self.cheminNCSC2(self.energy_tab, loop - i)
+                decrement = int((len(path) / self.height))
                 i += decrement
                 tmp = self.img_data
-                #debug_path(self.width, self.height, path, tmp)
-                img = self.copyImage(tmp, path)
-            self.update_values(self.width-decrement, self.height, image_data=img)
+                # debug_path(self.width, self.height, path, tmp)
+                img = self.reduce_image(tmp, path)
+            self.update_values(self.width - decrement, self.height, image_data=img)
         if orientation == 0:
             self.width, self.height = self.height, self.width
             img = Utils.invRotate(img, self.width, self.height)
             self.energy_tab = Utils.invRotate(self.energy_tab, self.width, self.height)
             self.img_data = img
 
-        self.gui.updateImage(img, self.width, self.height)
-
+        self.gui.update_image(img, self.width, self.height)
 
     @Utils.timing
-    def copyImage(self, tmp, path):
+    def shrink_image2(self, loop, orientation):
+        img = self.img
+        if orientation == 0:
+            self.width, self.height = self.height, self.width
+            self.energy_tab = Utils.rotate(self.energy_tab, self.width, self.height)
+            self.img_data = Utils.rotate(self.img_data, self.width, self.height)
+        i = 0
+        while i < loop:
+            decrement = 1
+            path = self.cheminNCSC2(self.energy_tab, loop - i)
+            decrement = int((len(path) / self.height))
+            i += decrement
+            tmp = self.img_data
+            # debug_path(self.width, self.height, path, tmp)
+            img = self.grow_image(tmp, path)
+
+            self.update_values(self.width + decrement, self.height, image_data=img)
+
+        if orientation == 0:
+            self.width, self.height = self.height, self.width
+            img = Utils.invRotate(img, self.width, self.height)
+            self.energy_tab = Utils.invRotate(self.energy_tab, self.width, self.height)
+            self.img_data = img
+
+        self.gui.update_image(img, self.width, self.height)
+
+    @Utils.timing
+    def reduce_image(self, tmp, path):
 
         newI = []
         energy_tab = self.energy_tab
         new_energy = []
-        prevpos=0
+        prevpos = 0
+        extend_i = newI.extend
+        extend_energy = new_energy.extend
 
         for i in path:
-            newI.extend(tmp[prevpos:i])
+            extend_i(tmp[prevpos:i])
 
-            new_energy.extend(energy_tab[prevpos:i])
-            prevpos = i+1
+            extend_energy(energy_tab[prevpos:i])
+            prevpos = i + 1
 
-        newI.extend(tmp[prevpos:])
+        extend_i(tmp[prevpos:])
 
-        new_energy.extend(energy_tab[prevpos:])
+        extend_energy(energy_tab[prevpos:])
         self.energy_tab = new_energy
+        return newI
+
+    @Utils.timing
+    def grow_image(self, tmp, path):
+
+        newI = []
+        energy_tab = self.energy_tab
+        new_energy = []
+        prevpos = 0
+        extend_i = newI.extend
+        extend_energy = new_energy.extend
+
+        for i in path:
+            r, g, b = tmp[i - 1]
+            r2, g2, b2 = tmp[i + 1]
+            np = ((r + r2) // 2, (g + g2) // 2, (b + b2) // 2)
+            extend_i(tmp[prevpos:i] + [np])
+
+            e = (energy_tab[i - 1] + energy_tab[i + 1]) // 2
+            extend_energy(energy_tab[prevpos:i] + [e])
+            prevpos = i
+
+        extend_i(tmp[prevpos:])
+
+        extend_energy(energy_tab[prevpos:])
+        self.energy_tab = new_energy
+
         return newI
 
     @Utils.timing
@@ -161,19 +214,18 @@ class Energy:
         casc = cv2.CascadeClassifier("./haarcascade_frontalface_default.xml")
 
         cv_img = cv2.cvtColor(np.array(self.img), cv2.COLOR_RGB2BGR)
-        img_gray = cv2.cvtColor(cv_img,cv2.COLOR_BGR2GRAY)
-        faces = casc.detectMultiScale(img_gray,1.3,5)
+        img_gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
+        faces = casc.detectMultiScale(img_gray, 1.3, 5)
         ww = self.width
 
-        for x,y,w,h in faces:
-            self.face_energy(ww,x,y,w,h)
+        for x, y, w, h in faces:
+            self.face_energy(ww, x, y, w, h)
 
     @Utils.timing
-    def face_energy(self,ww,x,y,w,h):
-        for i in range(y,y+h):
-            for j in range(x,x+w):
-                self.energy_tab[i*ww+j] = 255
-
+    def face_energy(self, ww, x, y, w, h):
+        for i in range(y, y + h):
+            for j in range(x, x + w):
+                self.energy_tab[i * ww + j] = 255
 
     def getNCSCpath(self, data, width, height, limit):
         tab = [(0, 0)] * (width * height)
@@ -246,4 +298,3 @@ def debug_path(w, h, path, img):
         img[p] = (255, 0, 0)
     ni.putdata(img)
     ni.show()
-
