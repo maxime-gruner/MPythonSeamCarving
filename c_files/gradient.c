@@ -27,6 +27,7 @@ int* calculate_energy(int w, int h, int* data){
             tmpx = 2*data[current-1] - 2*data[current+1] + corner + y - x;
             tmpy = 2*data[current_minus_w] - 2*data[current+w] + corner + x - y;
             res[current] =  abs(tmpx) + abs(tmpy);
+            if(res[current]>255) res[current] = 255;
         }
     }
     return res;
